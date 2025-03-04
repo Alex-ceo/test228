@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мое первое Telegram Mini App</title>
+    <title>Мой Мини Банк</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 20px;
             color: var(--tg-theme-text-color, #000000);
@@ -17,77 +17,122 @@
             max-width: 500px;
             margin: 0 auto;
         }
-        .header {
+        .balance {
             text-align: center;
+            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            padding: 20px;
+            border-radius: 10px;
             margin-bottom: 20px;
         }
-        button {
+        .balance h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .card {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
             background-color: var(--tg-theme-button-color, #2481cc);
             color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            padding: 10px 15px;
             border-radius: 8px;
             cursor: pointer;
-            font-size: 16px;
-            width: 100%;
-            margin-bottom: 10px;
         }
-        .user-info {
-            margin-top: 20px;
-            padding: 15px;
-            border-radius: 8px;
+        .transaction {
             background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Мое первое Telegram Mini App</h1>
+        <div class="balance">
+            <h2>Баланс: <span id="balanceAmount">10 000 ₽</span></h2>
         </div>
-        <button id="showUserInfo">Показать мою информацию</button>
-        <button id="sendMessage">Отправить сообщение в чат</button>
-        <button id="closeApp">Закрыть приложение</button>
-        
-        <div class="user-info" id="userInfo" style="display: none;"></div>
+
+        <div class="card">
+            <h3>Дебетовая карта *6789</h3>
+            <p>Срок действия: 12/26</p>
+        </div>
+
+        <button class="btn" id="transferBtn">Перевести деньги</button>
+        <button class="btn" id="payBtn">Оплатить услуги</button>
+        <button class="btn" id="historyBtn">История транзакций</button>
+
+        <div id="transactionHistory" style="display: none;">
+            <h3>История транзакций</h3>
+            <div class="transaction">
+                <p>Перевод Иванову И.И. - 1 500 ₽</p>
+                <small>15 марта 2024, 14:30</small>
+            </div>
+            <div class="transaction">
+                <p>Оплата коммунальных услуг - 3 200 ₽</p>
+                <small>10 марта 2024, 09:15</small>
+            </div>
+            <div class="transaction">
+                <p>Зачисление зарплаты - 50 000 ₽</p>
+                <small>05 марта 2024, 10:00</small>
+            </div>
+        </div>
     </div>
 
     <script>
-        let tg = window.Telegram.WebApp;
-        
-        // Инициализация приложения
+        const tg = window.Telegram.WebApp;
         tg.expand();
-        
-        // Получение элементов DOM
-        const showUserInfoBtn = document.getElementById('showUserInfo');
-        const sendMessageBtn = document.getElementById('sendMessage');
-        const closeAppBtn = document.getElementById('closeApp');
-        const userInfoDiv = document.getElementById('userInfo');
-        
-        // Обработчики событий
-        showUserInfoBtn.addEventListener('click', function() {
-            if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const user = tg.initDataUnsafe.user;
-                userInfoDiv.innerHTML = `
-                    <p><strong>ID:</strong> ${user.id}</p>
-                    <p><strong>Имя:</strong> ${user.first_name}</p>
-                    <p><strong>Фамилия:</strong> ${user.last_name || 'Не указана'}</p>
-                    <p><strong>Имя пользователя:</strong> ${user.username || 'Не указано'}</p>
-                `;
-                userInfoDiv.style.display = 'block';
+
+        const transferBtn = document.getElementById('transferBtn');
+        const payBtn = document.getElementById('payBtn');
+        const historyBtn = document.getElementById('historyBtn');
+        const transactionHistory = document.getElementById('transactionHistory');
+
+        transferBtn.addEventListener('click', function() {
+            tg.showPopup({
+                title: 'Перевод',
+                message: 'Введите сумму и получателя',
+                input: {
+                    placeholder: 'Сумма перевода',
+                    value: ''
+                },
+                buttons: [
+                    {type: 'default', text: 'Перевести'},
+                    {type: 'cancel', text: 'Отмена'}
+                ]
+            });
+        });
+
+        payBtn.addEventListener('click', function() {
+            tg.showPopup({
+                title: 'Оплата услуг',
+                message: 'Выберите услугу для оплаты',
+                buttons: [
+                    {type: 'default', text: 'Коммунальные услуги'},
+                    {type: 'default', text: 'Мобильная связь'},
+                    {type: 'default', text: 'Интернет'},
+                    {type: 'cancel', text: 'Отмена'}
+                ]
+            });
+        });
+
+        historyBtn.addEventListener('click', function() {
+            if (transactionHistory.style.display === 'none') {
+                transactionHistory.style.display = 'block';
             } else {
-                userInfoDiv.innerHTML = "<p>Информация о пользователе недоступна.</p>";
-                userInfoDiv.style.display = 'block';
+                transactionHistory.style.display = 'none';
             }
-        });
-        
-        sendMessageBtn.addEventListener('click', function() {
-            tg.sendData("Привет из мини-приложения!");
-        });
-        
-        closeAppBtn.addEventListener('click', function() {
-            tg.close();
         });
     </script>
 </body>
 </html>
+            
+   
+        
