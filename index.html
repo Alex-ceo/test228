@@ -3,85 +3,141 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мой Мини Банк</title>
+    <title>Мой Кошелек</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            margin: 0;
-            padding: 20px;
-            color: var(--tg-theme-text-color, #000000);
-            background-color: var(--tg-theme-bg-color, #ffffff);
+        :root {
+            --tg-wallet-bg: #f0f0f0;
+            --tg-wallet-card-bg: #ffffff;
+            --tg-wallet-primary: #2481cc;
+            --tg-wallet-text: #000000;
+            --tg-wallet-secondary-text: #777777;
         }
-        .container {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--tg-wallet-bg);
+            color: var(--tg-wallet-text);
+        }
+        .wallet-container {
             max-width: 500px;
             margin: 0 auto;
+            padding: 15px;
         }
-        .balance {
-            text-align: center;
-            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-        }
-        .balance h2 {
-            margin: 0;
-            font-size: 24px;
-        }
-        .card {
-            background-color: var(--tg-theme-button-color, #2481cc);
-            color: white;
-            border-radius: 10px;
+        .wallet-card {
+            background-color: var(--tg-wallet-card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             padding: 15px;
             margin-bottom: 15px;
         }
-        .btn {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 10px;
-            background-color: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
+        .balance-card {
+            text-align: center;
+            padding: 20px;
+        }
+        .balance-amount {
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--tg-wallet-primary);
+        }
+        .card-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 15px;
+        }
+        .card-type {
+            font-weight: 500;
+            color: var(--tg-wallet-secondary-text);
+        }
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .action-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: var(--tg-wallet-card-bg);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
             border: none;
-            border-radius: 8px;
             cursor: pointer;
         }
-        .transaction {
-            background-color: var(--tg-theme-secondary-bg-color, #f5f5f5);
-            padding: 10px;
-            border-radius: 8px;
+        .action-btn img {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 5px;
+        }
+        .transactions-title {
+            font-weight: 600;
             margin-bottom: 10px;
+        }
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .transaction-details {
+            flex-grow: 1;
+        }
+        .transaction-amount {
+            font-weight: 500;
+        }
+        .transaction-positive {
+            color: green;
+        }
+        .transaction-negative {
+            color: red;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="balance">
-            <h2>Баланс: <span id="balanceAmount">10 000 ₽</span></h2>
+    <div class="wallet-container">
+        <div class="wallet-card balance-card">
+            <div class="balance-amount">10 000 ₽</div>
+            <div class="card-info">
+                <span class="card-type">Основная карта *6789</span>
+                <span>Visa</span>
+            </div>
         </div>
 
-        <div class="card">
-            <h3>Дебетовая карта *6789</h3>
-            <p>Срок действия: 12/26</p>
+        <div class="quick-actions">
+            <button class="action-btn" id="transferBtn">
+                <img src="/api/placeholder/32/32" alt="Перевод">
+                Перевод
+            </button>
+            <button class="action-btn" id="payBtn">
+                <img src="/api/placeholder/32/32" alt="Оплата">
+                Оплата
+            </button>
+            <button class="action-btn" id="addMoneyBtn">
+                <img src="/api/placeholder/32/32" alt="Пополнить">
+                Пополнить
+            </button>
         </div>
 
-        <button class="btn" id="transferBtn">Перевести деньги</button>
-        <button class="btn" id="payBtn">Оплатить услуги</button>
-        <button class="btn" id="historyBtn">История транзакций</button>
-
-        <div id="transactionHistory" style="display: none;">
-            <h3>История транзакций</h3>
-            <div class="transaction">
-                <p>Перевод Иванову И.И. - 1 500 ₽</p>
-                <small>15 марта 2024, 14:30</small>
+        <div class="wallet-card">
+            <div class="transactions-title">История транзакций</div>
+            <div class="transaction-item">
+                <div class="transaction-details">
+                    <div>Перевод Ивану</div>
+                    <small>15 марта, 14:30</small>
+                </div>
+                <div class="transaction-amount transaction-negative">-1 500 ₽</div>
             </div>
-            <div class="transaction">
-                <p>Оплата коммунальных услуг - 3 200 ₽</p>
-                <small>10 марта 2024, 09:15</small>
-            </div>
-            <div class="transaction">
-                <p>Зачисление зарплаты - 50 000 ₽</p>
-                <small>05 марта 2024, 10:00</small>
+            <div class="transaction-item">
+                <div class="transaction-details">
+                    <div>Зарплата</div>
+                    <small>5 марта, 10:00</small>
+                </div>
+                <div class="transaction-amount transaction-positive">+50 000 ₽</div>
             </div>
         </div>
     </div>
@@ -90,12 +146,7 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        const transferBtn = document.getElementById('transferBtn');
-        const payBtn = document.getElementById('payBtn');
-        const historyBtn = document.getElementById('historyBtn');
-        const transactionHistory = document.getElementById('transactionHistory');
-
-        transferBtn.addEventListener('click', function() {
+        document.getElementById('transferBtn').addEventListener('click', () => {
             tg.showPopup({
                 title: 'Перевод',
                 message: 'Введите сумму и получателя',
@@ -110,12 +161,12 @@
             });
         });
 
-        payBtn.addEventListener('click', function() {
+        document.getElementById('payBtn').addEventListener('click', () => {
             tg.showPopup({
                 title: 'Оплата услуг',
-                message: 'Выберите услугу для оплаты',
+                message: 'Выберите услугу',
                 buttons: [
-                    {type: 'default', text: 'Коммунальные услуги'},
+                    {type: 'default', text: 'Коммунальные'},
                     {type: 'default', text: 'Мобильная связь'},
                     {type: 'default', text: 'Интернет'},
                     {type: 'cancel', text: 'Отмена'}
@@ -123,16 +174,17 @@
             });
         });
 
-        historyBtn.addEventListener('click', function() {
-            if (transactionHistory.style.display === 'none') {
-                transactionHistory.style.display = 'block';
-            } else {
-                transactionHistory.style.display = 'none';
-            }
+        document.getElementById('addMoneyBtn').addEventListener('click', () => {
+            tg.showPopup({
+                title: 'Пополнение',
+                message: 'Выберите способ пополнения',
+                buttons: [
+                    {type: 'default', text: 'Карта'},
+                    {type: 'default', text: 'СБП'},
+                    {type: 'cancel', text: 'Отмена'}
+                ]
+            });
         });
     </script>
 </body>
 </html>
-            
-   
-        
