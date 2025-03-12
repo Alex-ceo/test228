@@ -3,6 +3,7 @@
 <head>
   <title>Карта Украины</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <style>
     #map { height: 600px; }
   </style>
@@ -12,6 +13,7 @@
   <div id="map"></div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
   <script>
     // Инициализация карты
     const map = L.map('map').setView([48.3794, 31.1656], 6); // Центр Украины
@@ -24,6 +26,15 @@
     // Пример маркера (Киев)
     const marker = L.marker([50.4501, 30.5234]).addTo(map);
     marker.bindPopup("Киев").openPopup();
+
+    // Навигация (Киев -> Львов)
+    L.Routing.control({
+      waypoints: [
+        L.latLng(50.4501, 30.5234), // Киев
+        L.latLng(49.8397, 24.0297)  // Львов
+      ],
+      routeWhileDragging: true
+    }).addTo(map);
   </script>
 </body>
 </html>
