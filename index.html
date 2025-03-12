@@ -5,12 +5,28 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
   <style>
-    #map { height: 600px; }
+    #map { height: 100vh; }
+    #route-form {
+      position: absolute;
+      top: 10px;
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
   </style>
 </head>
 <body>
-  <h1>Карта Украины</h1>
   <div id="map"></div>
+
+  <!-- Форма для ввода маршрута -->
+  <div id="route-form">
+    <input type="text" id="from" placeholder="Откуда (например, Чернигов)">
+    <input type="text" id="to" placeholder="Куда (например, Львов)">
+    <button onclick="calculateRoute()">Построить маршрут</button>
+  </div>
 
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
@@ -23,18 +39,70 @@
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Пример маркера (Киев)
-    const marker = L.marker([50.4501, 30.5234]).addTo(map);
-    marker.bindPopup("Киев").openPopup();
+    // Переменная для маршрута
+    let routeControl;
 
-    // Навигация (Киев -> Львов)
-    L.Routing.control({
-      waypoints: [
-        L.latLng(50.4501, 30.5234), // Киев
-        L.latLng(49.8397, 24.0297)  // Львов
-      ],
-      routeWhileDragging: true
-    }).addTo(map);
+    // Функция для поиска координат по названию города
+    async function geocode(cityName) {
+      const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(cityName)}`);
+      const data = await response.json();
+      if (data.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      } else {
+        alert("Город не найден!");
+        return null;
+      }
+    }
+
+    // Функция для построения маршрута
+    async function calculateRoute() {
+      const from = document.getElementById('from').value;
+      const to = document.getElementById('to').value;
+
+      const fromCoords = await geocode(from);
+      const toCoords = await geocode(to);
+
+      if (fromCoords && toCoords) {
+        if (routeControl) {
+          map.removeControl(routeControl);
+        }
+
+        routeControl = L.Routing.control({
+          waypoints: [
+            L.latLng(fromCoords.lat, fromCoords.lng),
+            L.latLng(toCoords.lat, toCoords.lng)
+          ],
+          routeWhileDragging: true
+        }).addTo(map);
+      }
+    }
+
+    // Определение текущего местоположения
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const userMarker = L.marker([latitude, longitude]).addTo(map);
+          userMarker.bindPopup("Ваше местоположение").openPopup();
+          map.setView([latitude, longitude], 13); // Увеличение масштаба
+        },
+        (error) => {
+          alert("Не удалось определить ваше местоположение.");
+        }
+      );
+    } else {
+      alert("Геолокация не поддерживается вашим браузером.");
+    }
+
+    // Добавление маркеров при клике на карту
+    map.on('click', function(e) {
+      const { lat, lng } = e.latlng;
+      const description = prompt("Введите описание для этого места:");
+      if (description) {
+        const marker = L.marker([lat, lng]).addTo(map);
+        marker.bindPopup(description).openPopup();
+      }
+    });
   </script>
 </body>
 </html>
