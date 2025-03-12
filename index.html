@@ -1,13 +1,19 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Map Application</title>
-    <link rel="stylesheet" href="styles.css">
+  <title>Карта Украины</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+  <style>
+    #map { height: 600px; }
+  </style>
 </head>
 <body>
-    <div id="map"></div>
-    <script src="script.js"></script>
+  <h1>Карта Украины</h1>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>
