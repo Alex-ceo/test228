@@ -79,32 +79,25 @@
     let markers = [];
     let currentRouteWaypoints = [];
 
-    // Загрузка меток с сервера
-    async function loadMarkers() {
-      const response = await fetch('http://localhost:5000/markers');
-      const data = await response.json();
-      data.forEach(marker => {
+    // Загрузка меток из localStorage
+    function loadMarkers() {
+      const savedMarkers = JSON.parse(localStorage.getItem('markers')) || [];
+      savedMarkers.forEach(marker => {
         const newMarker = L.marker([marker.lat, marker.lng]).addTo(map);
         newMarker.bindPopup(marker.description).openPopup();
-        markers.push({ id: marker._id, marker: newMarker, description: marker.description });
+        markers.push({ marker: newMarker, description: marker.description });
       });
       updateMarkersList();
     }
 
-    // Сохранение метки на сервере
-    async function saveMarker(lat, lng, description) {
-      const response = await fetch('http://localhost:5000/markers', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lat, lng, description }),
-      });
-      const data = await response.json();
-      return data;
-    }
-
-    // Удаление метки с сервера
-    async function deleteMarker(id) {
-      await fetch(`http://localhost:5000/markers/${id}`, { method: 'DELETE' });
+    // Сохранение меток в localStorage
+    function saveMarkers() {
+      const markersData = markers.map(m => ({
+        lat: m.marker.getLatLng().lat,
+        lng: m.marker.getLatLng().lng,
+        description: m.description,
+      }));
+      localStorage.setItem('markers', JSON.stringify(markersData));
     }
 
     // Обновление списка меток
@@ -116,15 +109,18 @@
         li.textContent = m.description;
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Удалить';
-        deleteButton.onclick = () => {
-          map.removeLayer(m.marker);
-          deleteMarker(m.id);
-          markers.splice(index, 1);
-          updateMarkersList();
-        };
+        deleteButton.onclick = () => deleteMarker(index);
         li.appendChild(deleteButton);
         ul.appendChild(li);
       });
+    }
+
+    // Удаление метки
+    function deleteMarker(index) {
+      map.removeLayer(markers[index].marker);
+      markers.splice(index, 1);
+      saveMarkers();
+      updateMarkersList();
     }
 
     // Функция для поиска координат по названию города
@@ -213,14 +209,14 @@
     }
 
     // Добавление маркеров при клике на карту
-    map.on('click', async function(e) {
+    map.on('click', function(e) {
       const { lat, lng } = e.latlng;
       const description = prompt("Введите описание для этого места:");
       if (description) {
         const marker = L.marker([lat, lng]).addTo(map);
         marker.bindPopup(description).openPopup();
-        const savedMarker = await saveMarker(lat, lng, description);
-        markers.push({ id: savedMarker._id, marker, description });
+        markers.push({ marker, description });
+        saveMarkers();
         updateMarkersList();
       }
     });
