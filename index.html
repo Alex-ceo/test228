@@ -55,6 +55,7 @@
 <body>
   <!-- Форма для ввода маршрута -->
   <div id="route-form">
+    <input type="text" id="from" placeholder="Откуда (например, Чернигов)">
     <input type="text" id="to" placeholder="Куда (например, Львов)">
     <button onclick="calculateRoute()">Построить маршрут</button>
     <button onclick="clearRoute()">Очистить маршрут</button>
@@ -150,20 +151,19 @@
 
     // Функция для построения маршрута
     async function calculateRoute() {
+      const from = document.getElementById('from').value;
       const to = document.getElementById('to').value;
 
+      const fromCoords = await geocode(from);
       const toCoords = await geocode(to);
 
-      if (toCoords) {
+      if (fromCoords && toCoords) {
         if (routeControl) {
           map.removeControl(routeControl);
         }
 
-        // Устанавливаем начальную точку (ваше текущее местоположение)
-        const fromCoords = map.getCenter(); // Используем центр карты как начальную точку
-
         // Сохраняем точки маршрута
-        currentRouteWaypoints = [fromCoords, L.latLng(toCoords.lat, toCoords.lng)];
+        currentRouteWaypoints = [L.latLng(fromCoords.lat, fromCoords.lng), L.latLng(toCoords.lat, toCoords.lng)];
 
         // Строим маршрут
         routeControl = L.Routing.control({
