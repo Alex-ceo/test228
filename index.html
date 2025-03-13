@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <head>
   <title>Карта Украины</title>
@@ -41,23 +41,17 @@
   <!-- Контейнер для карты -->
   <div id="map"></div>
 
-  <!-- Подключаем Leaflet, Leaflet Routing Machine и Mapbox -->
+  <!-- Подключаем Leaflet и Leaflet Routing Machine -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
-  <script src="https://unpkg.com/leaflet-geolocation/dist/leaflet-geolocation.js"></script>
 
   <script>
     // Инициализация карты
     const map = L.map('map').setView([48.3794, 31.1656], 6); // Центр Украины
 
-    // Используем Mapbox для стиля, похожего на Google Maps
-    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-      attribution: '© <a href="https://www.mapbox.com/">Mapbox</a>',
-      maxZoom: 18,
-      id: 'mapbox/streets-v11',
-      tileSize: 512,
-      zoomOffset: -1,
-      accessToken: 'ваш_токен_Mapbox' // Замените на ваш токен Mapbox
+    // Используем OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     // Переменные для маршрута и маркера местоположения
