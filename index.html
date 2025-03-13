@@ -40,6 +40,16 @@
       max-height: 300px;
       overflow-y: auto;
     }
+    #speed-info {
+      position: absolute;
+      bottom: 20px;
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
   </style>
 </head>
 <body>
@@ -54,6 +64,11 @@
   <div id="markers-list">
     <h3>Метки</h3>
     <ul id="markers-ul"></ul>
+  </div>
+
+  <!-- Информация о скорости -->
+  <div id="speed-info">
+    <p>Скорость: <span id="speed">0</span> км/ч</p>
   </div>
 
   <!-- Контейнер для карты -->
@@ -177,12 +192,16 @@
       }
     }
 
-    // Определение текущего местоположения
+    // Определение текущего местоположения и скорости
     if (navigator.geolocation) {
       // Отслеживание перемещения
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
+          const { latitude, longitude, speed } = position.coords;
+
+          // Обновляем скорость
+          const speedKmh = speed ? (speed * 3.6).toFixed(2) : 0; // Переводим м/с в км/ч
+          document.getElementById('speed').textContent = speedKmh;
 
           if (userMarker) {
             // Обновляем позицию маркера
