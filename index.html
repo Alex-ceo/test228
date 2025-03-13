@@ -40,6 +40,17 @@
       max-height: 300px;
       overflow-y: auto;
     }
+    #location-button {
+      position: absolute;
+      top: 180px; /* Расположение кнопки ниже списка меток */
+      left: 50px;
+      z-index: 1000;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -56,6 +67,9 @@
     <h3>Метки</h3>
     <ul id="markers-ul"></ul>
   </div>
+
+  <!-- Кнопка для отображения местоположения -->
+  <div id="location-button" onclick="showLocation()">Показать мое местоположение</div>
 
   <!-- Контейнер для карты -->
   <div id="map"></div>
@@ -77,6 +91,7 @@
     let routeControl;
     let markers = [];
     let currentRouteWaypoints = [];
+    let userMarker = null;
 
     // Загрузка меток из localStorage
     function loadMarkers() {
@@ -167,6 +182,35 @@
       if (routeControl) {
         map.removeControl(routeControl);
         routeControl = null;
+      }
+    }
+
+    // Функция для отображения местоположения пользователя
+    function showLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+
+            // Удаляем старый маркер, если он есть
+            if (userMarker) {
+              map.removeLayer(userMarker);
+            }
+
+            // Создаем новый маркер
+            userMarker = L.marker([latitude, longitude]).addTo(map);
+            userMarker.bindPopup("Ваше местоположение").openPopup();
+
+            // Центрируем карту на местоположении пользователя
+            map.setView([latitude, longitude], 13);
+          },
+          (error) => {
+            alert("Не удалось определить ваше местоположение.");
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        alert("Геолокация не поддерживается вашим браузером.");
       }
     }
 
