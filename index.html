@@ -40,16 +40,6 @@
       max-height: 300px;
       overflow-y: auto;
     }
-    #info-panel {
-      position: absolute;
-      bottom: 20px;
-      left: 50px;
-      z-index: 1000;
-      background: white;
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    }
   </style>
 </head>
 <body>
@@ -64,12 +54,6 @@
   <div id="markers-list">
     <h3>Метки</h3>
     <ul id="markers-ul"></ul>
-  </div>
-
-  <!-- Информационная панель -->
-  <div id="info-panel">
-    <p>Скорость: <span id="speed">0</span> км/ч</p>
-    <p>Осталось ехать: <span id="distance-left">0</span> км</p>
   </div>
 
   <!-- Контейнер для карты -->
@@ -94,7 +78,6 @@
     let watchId;
     let markers = [];
     let currentRouteWaypoints = [];
-    let currentRoute;
 
     // Загрузка меток из localStorage
     function loadMarkers() {
@@ -183,9 +166,6 @@
           draggableWaypoints: false,
           fitSelectedRoutes: true,
         }).addTo(map);
-
-        // Сохраняем маршрут для обновления
-        currentRoute = routeControl;
       }
     }
 
@@ -197,36 +177,12 @@
       }
     }
 
-    // Функция для обновления оставшегося расстояния
-    function updateDistanceLeft() {
-      if (currentRoute && userMarker) {
-        const userPosition = userMarker.getLatLng();
-        const route = currentRoute.getPlan();
-
-        // Находим ближайшую точку на маршруте
-        const nearestPoint = route.getWaypoints().reduce((nearest, point) => {
-          const distance = userPosition.distanceTo(point.latLng);
-          return distance < nearest.distance ? { point, distance } : nearest;
-        }, { distance: Infinity });
-
-        if (nearestPoint.point) {
-          // Обновляем оставшееся расстояние
-          const distanceLeft = nearestPoint.point.latLng.distanceTo(route.getWaypoints()[1].latLng) / 1000; // В километрах
-          document.getElementById('distance-left').textContent = distanceLeft.toFixed(2);
-        }
-      }
-    }
-
-    // Определение текущего местоположения и скорости
+    // Определение текущего местоположения
     if (navigator.geolocation) {
       // Отслеживание перемещения
       watchId = navigator.geolocation.watchPosition(
         (position) => {
-          const { latitude, longitude, speed } = position.coords;
-
-          // Обновляем скорость
-          const speedKmh = speed ? (speed * 3.6).toFixed(2) : 0; // Переводим м/с в км/ч
-          document.getElementById('speed').textContent = speedKmh;
+          const { latitude, longitude } = position.coords;
 
           if (userMarker) {
             // Обновляем позицию маркера
@@ -237,17 +193,10 @@
               currentRouteWaypoints[0] = L.latLng(latitude, longitude);
               routeControl.setWaypoints(currentRouteWaypoints);
             }
-
-            // Обновляем оставшееся расстояние
-            updateDistanceLeft();
-
-            // Центрируем карту на вашем местоположении
-            map.setView([latitude, longitude], map.getZoom());
           } else {
             // Создаем маркер, если его еще нет
             userMarker = L.marker([latitude, longitude]).addTo(map);
             userMarker.bindPopup("Ваше местоположение").openPopup();
-            map.setView([latitude, longitude], 13); // Увеличение масштаба
           }
         },
         (error) => {
