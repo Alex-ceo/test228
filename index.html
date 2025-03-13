@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html>
 <head>
   <title>Карта Украины</title>
@@ -33,29 +33,37 @@
 <body>
   <!-- Форма для ввода маршрута -->
   <div id="route-form">
-    <input type="text" id="from" placeholder="Откуда (например, Чернигов)">
     <input type="text" id="to" placeholder="Куда (например, Львов)">
     <button onclick="calculateRoute()">Построить маршрут</button>
+    <button onclick="clearRoute()">Очистить маршрут</button>
   </div>
 
   <!-- Контейнер для карты -->
   <div id="map"></div>
 
-  <!-- Подключаем Leaflet и Leaflet Routing Machine -->
+  <!-- Подключаем Leaflet, Leaflet Routing Machine и Mapbox -->
   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+  <script src="https://unpkg.com/leaflet-geolocation/dist/leaflet-geolocation.js"></script>
 
   <script>
     // Инициализация карты
     const map = L.map('map').setView([48.3794, 31.1656], 6); // Центр Украины
 
-    // Добавление слоя карты (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
+    // Используем Mapbox для стиля, похожего на Google Maps
+    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+      attribution: '© <a href="https://www.mapbox.com/">Mapbox</a>',
+      maxZoom: 18,
+      id: 'mapbox/streets-v11',
+      tileSize: 512,
+      zoomOffset: -1,
+      accessToken: 'ваш_токен_Mapbox' // Замените на ваш токен Mapbox
     }).addTo(map);
 
-    // Переменная для маршрута
+    // Переменные для маршрута и маркера местоположения
     let routeControl;
+    let userMarker;
+    let watchId;
 
     // Функция для поиска координат по названию города
     async function geocode(cityName) {
@@ -71,20 +79,23 @@
 
     // Функция для построения маршрута
     async function calculateRoute() {
-      const from = document.getElementById('from').value;
       const to = document.getElementById('to').value;
 
-      const fromCoords = await geocode(from);
+      if (!userMarker) {
+        alert("Определите ваше местоположение!");
+        return;
+      }
+
       const toCoords = await geocode(to);
 
-      if (fromCoords && toCoords) {
+      if (toCoords) {
         if (routeControl) {
           map.removeControl(routeControl);
         }
 
         routeControl = L.Routing.control({
           waypoints: [
-            L.latLng(fromCoords.lat, fromCoords.lng),
+            L.latLng(userMarker.getLatLng().lat, userMarker.getLatLng().lng),
             L.latLng(toCoords.lat, toCoords.lng)
           ],
           routeWhileDragging: true,
@@ -96,18 +107,33 @@
       }
     }
 
+    // Функция для очистки маршрута
+    function clearRoute() {
+      if (routeControl) {
+        map.removeControl(routeControl);
+        routeControl = null;
+      }
+    }
+
     // Определение текущего местоположения
     if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
+      // Отслеживание перемещения
+      watchId = navigator.geolocation.watchPosition(
         (position) => {
           const { latitude, longitude } = position.coords;
-          const userMarker = L.marker([latitude, longitude]).addTo(map);
-          userMarker.bindPopup("Ваше местоположение").openPopup();
-          map.setView([latitude, longitude], 13); // Увеличение масштаба
+
+          if (userMarker) {
+            userMarker.setLatLng([latitude, longitude]);
+          } else {
+            userMarker = L.marker([latitude, longitude]).addTo(map);
+            userMarker.bindPopup("Ваше местоположение").openPopup();
+            map.setView([latitude, longitude], 13); // Увеличение масштаба
+          }
         },
         (error) => {
           alert("Не удалось определить ваше местоположение.");
-        }
+        },
+        { enableHighAccuracy: true }
       );
     } else {
       alert("Геолокация не поддерживается вашим браузером.");
