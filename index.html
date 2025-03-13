@@ -67,7 +67,7 @@
     // Инициализация карты
     const map = L.map('map').setView([48.3794, 31.1656], 6); // Центр Украины
 
-    // Используем OpenStreetMap с кастомным стилем (похожим на Google Maps)
+    // Используем OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
@@ -77,6 +77,7 @@
     let userMarker;
     let watchId;
     let markers = [];
+    let currentRouteWaypoints = [];
 
     // Загрузка меток из localStorage
     function loadMarkers() {
@@ -150,11 +151,15 @@
           map.removeControl(routeControl);
         }
 
+        // Устанавливаем начальную точку (ваше текущее местоположение)
+        const fromCoords = userMarker.getLatLng();
+
+        // Сохраняем точки маршрута
+        currentRouteWaypoints = [fromCoords, L.latLng(toCoords.lat, toCoords.lng)];
+
+        // Строим маршрут
         routeControl = L.Routing.control({
-          waypoints: [
-            L.latLng(userMarker.getLatLng().lat, userMarker.getLatLng().lng),
-            L.latLng(toCoords.lat, toCoords.lng)
-          ],
+          waypoints: currentRouteWaypoints,
           routeWhileDragging: true,
           show: true,
           addWaypoints: false,
@@ -180,8 +185,19 @@
           const { latitude, longitude } = position.coords;
 
           if (userMarker) {
+            // Обновляем позицию маркера
             userMarker.setLatLng([latitude, longitude]);
+
+            // Если маршрут построен, обновляем начальную точку маршрута
+            if (routeControl && currentRouteWaypoints.length > 0) {
+              currentRouteWaypoints[0] = L.latLng(latitude, longitude);
+              routeControl.setWaypoints(currentRouteWaypoints);
+            }
+
+            // Центрируем карту на вашем местоположении
+            map.setView([latitude, longitude], map.getZoom());
           } else {
+            // Создаем маркер, если его еще нет
             userMarker = L.marker([latitude, longitude]).addTo(map);
             userMarker.bindPopup("Ваше местоположение").openPopup();
             map.setView([latitude, longitude], 13); // Увеличение масштаба
