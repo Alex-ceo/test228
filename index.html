@@ -30,7 +30,7 @@
     }
     #markers-list {
       position: absolute;
-      top: 100px;
+      top: 120px; /* Сдвинуто на 2 см (20px) вниз */
       left: 50px;
       z-index: 1000;
       background: white;
@@ -39,16 +39,6 @@
       box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
       max-height: 300px;
       overflow-y: auto;
-    }
-    #info-panel {
-      position: absolute;
-      bottom: 20px;
-      left: 50px;
-      z-index: 1000;
-      background: white;
-      padding: 10px;
-      border-radius: 5px;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
     }
   </style>
 </head>
@@ -65,11 +55,6 @@
   <div id="markers-list">
     <h3>Метки</h3>
     <ul id="markers-ul"></ul>
-  </div>
-
-  <!-- Информационная панель -->
-  <div id="info-panel">
-    <p>Осталось ехать: <span id="distance-left">0</span> км</p>
   </div>
 
   <!-- Контейнер для карты -->
@@ -174,18 +159,6 @@
           draggableWaypoints: false,
           fitSelectedRoutes: true,
         }).addTo(map);
-
-        // Обновляем оставшееся расстояние
-        updateDistanceLeft();
-      }
-    }
-
-    // Функция для обновления оставшегося расстояния
-    function updateDistanceLeft() {
-      if (routeControl) {
-        const route = routeControl.getPlan();
-        const distanceLeft = route.getWaypoints()[0].latLng.distanceTo(route.getWaypoints()[1].latLng) / 1000; // В километрах
-        document.getElementById('distance-left').textContent = distanceLeft.toFixed(2);
       }
     }
 
