@@ -40,7 +40,7 @@
       max-height: 300px;
       overflow-y: auto;
     }
-    #speed-info {
+    #info-panel {
       position: absolute;
       bottom: 20px;
       left: 50px;
@@ -66,9 +66,10 @@
     <ul id="markers-ul"></ul>
   </div>
 
-  <!-- Информация о скорости -->
-  <div id="speed-info">
+  <!-- Информационная панель -->
+  <div id="info-panel">
     <p>Скорость: <span id="speed">0</span> км/ч</p>
+    <p>Осталось ехать: <span id="distance-left">0</span> км</p>
   </div>
 
   <!-- Контейнер для карты -->
@@ -93,6 +94,7 @@
     let watchId;
     let markers = [];
     let currentRouteWaypoints = [];
+    let currentRoute;
 
     // Загрузка меток из localStorage
     function loadMarkers() {
@@ -181,6 +183,9 @@
           draggableWaypoints: false,
           fitSelectedRoutes: true,
         }).addTo(map);
+
+        // Сохраняем маршрут для обновления
+        currentRoute = routeControl;
       }
     }
 
@@ -189,6 +194,26 @@
       if (routeControl) {
         map.removeControl(routeControl);
         routeControl = null;
+      }
+    }
+
+    // Функция для обновления оставшегося расстояния
+    function updateDistanceLeft() {
+      if (currentRoute && userMarker) {
+        const userPosition = userMarker.getLatLng();
+        const route = currentRoute.getPlan();
+
+        // Находим ближайшую точку на маршруте
+        const nearestPoint = route.getWaypoints().reduce((nearest, point) => {
+          const distance = userPosition.distanceTo(point.latLng);
+          return distance < nearest.distance ? { point, distance } : nearest;
+        }, { distance: Infinity });
+
+        if (nearestPoint.point) {
+          // Обновляем оставшееся расстояние
+          const distanceLeft = nearestPoint.point.latLng.distanceTo(route.getWaypoints()[1].latLng) / 1000; // В километрах
+          document.getElementById('distance-left').textContent = distanceLeft.toFixed(2);
+        }
       }
     }
 
@@ -212,6 +237,9 @@
               currentRouteWaypoints[0] = L.latLng(latitude, longitude);
               routeControl.setWaypoints(currentRouteWaypoints);
             }
+
+            // Обновляем оставшееся расстояние
+            updateDistanceLeft();
 
             // Центрируем карту на вашем местоположении
             map.setView([latitude, longitude], map.getZoom());
