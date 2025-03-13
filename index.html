@@ -89,8 +89,6 @@
 
     // Переменные для маршрута и маркера местоположения
     let routeControl;
-    let userMarker;
-    let watchId;
     let markers = [];
     let currentRouteWaypoints = [];
 
@@ -154,11 +152,6 @@
     async function calculateRoute() {
       const to = document.getElementById('to').value;
 
-      if (!userMarker) {
-        alert("Определите ваше местоположение!");
-        return;
-      }
-
       const toCoords = await geocode(to);
 
       if (toCoords) {
@@ -167,7 +160,7 @@
         }
 
         // Устанавливаем начальную точку (ваше текущее местоположение)
-        const fromCoords = userMarker.getLatLng();
+        const fromCoords = map.getCenter(); // Используем центр карты как начальную точку
 
         // Сохраняем точки маршрута
         currentRouteWaypoints = [fromCoords, L.latLng(toCoords.lat, toCoords.lng)];
@@ -189,21 +182,10 @@
 
     // Функция для обновления оставшегося расстояния
     function updateDistanceLeft() {
-      if (routeControl && userMarker) {
-        const userPosition = userMarker.getLatLng();
+      if (routeControl) {
         const route = routeControl.getPlan();
-
-        // Находим ближайшую точку на маршруте
-        const nearestPoint = route.getWaypoints().reduce((nearest, point) => {
-          const distance = userPosition.distanceTo(point.latLng);
-          return distance < nearest.distance ? { point, distance } : nearest;
-        }, { distance: Infinity });
-
-        if (nearestPoint.point) {
-          // Обновляем оставшееся расстояние
-          const distanceLeft = nearestPoint.point.latLng.distanceTo(route.getWaypoints()[1].latLng) / 1000; // В километрах
-          document.getElementById('distance-left').textContent = distanceLeft.toFixed(2);
-        }
+        const distanceLeft = route.getWaypoints()[0].latLng.distanceTo(route.getWaypoints()[1].latLng) / 1000; // В километрах
+        document.getElementById('distance-left').textContent = distanceLeft.toFixed(2);
       }
     }
 
@@ -213,40 +195,6 @@
         map.removeControl(routeControl);
         routeControl = null;
       }
-    }
-
-    // Определение текущего местоположения
-    if (navigator.geolocation) {
-      // Отслеживание перемещения
-      watchId = navigator.geolocation.watchPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-
-          if (userMarker) {
-            // Обновляем позицию маркера
-            userMarker.setLatLng([latitude, longitude]);
-
-            // Если маршрут построен, обновляем начальную точку маршрута
-            if (routeControl && currentRouteWaypoints.length > 0) {
-              currentRouteWaypoints[0] = L.latLng(latitude, longitude);
-              routeControl.setWaypoints(currentRouteWaypoints);
-            }
-
-            // Обновляем оставшееся расстояние
-            updateDistanceLeft();
-          } else {
-            // Создаем маркер, если его еще нет
-            userMarker = L.marker([latitude, longitude]).addTo(map);
-            userMarker.bindPopup("Ваше местоположение").openPopup();
-          }
-        },
-        (error) => {
-          alert("Не удалось определить ваше местоположение.");
-        },
-        { enableHighAccuracy: true }
-      );
-    } else {
-      alert("Геолокация не поддерживается вашим браузером.");
     }
 
     // Добавление маркеров при клике на карту
